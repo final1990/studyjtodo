@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './app.vue'
-import '../asserts/styles/app.css'
-import '../asserts/images/coffee.svg'
+import '../asserts/styles/app.styl'
 
 const root = document.createElement('div')
 document.body.appendChild(root)

@@ -28,18 +28,21 @@ const config = {
         loader: 'vue-loader'
       },
       {
-        test: /\.css$/,
+        test: /\.jsx$/,
+        loader: 'babel-loader'
+      },
+      {
+        test: /\.styl(us)?$/,
         use: [
           'vue-style-loader',
+          'css-loader',
           {
-            loader: 'css-loader',
+            loader: 'postcss-loader',
             options: {
-              // enable CSS Modules
-              modules: true,
-              // customize generated class names
-              localIdentName: '[local]_[hash:base64:8]'
+              sourceMap: true
             }
-          }
+          },
+          'stylus-loader'
         ]
       },
       {
@@ -48,7 +51,7 @@ const config = {
           {
             loader: 'url-loader',
             options: {
-              limit: 1024,
+              limit: 2048,
               name: '[name].[ext]'
             }
           }
@@ -59,14 +62,22 @@ const config = {
 }
 // config the dev mode
 if (isDev) {
+  //方便代码调试
+  config.devtool = '#cheap-module-eval-source-map'
   config.devServer = {
     port: 8888,
     host: '0.0.0.0',
     overlay: {
       // show errors on browser
       errors: true
-    }
+    },
+    hot: true
   }
+
+  config.plugins.push(
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoEmitOnErrorsPlugin
+  )
 }
 
 module.exports = config

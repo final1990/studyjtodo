@@ -7,25 +7,50 @@
       placeholder="接下去要做什么"
       @keyup.enter="addTodo"
     >
-    <Item :todo="todo"></Item>
+    <Item v-for="todo in filteredTodos" :key="todo.id" :todo="todo" @del="delItem"/>
+    <Tabs :filter="filter" :todos="todos" @toggle="toggleItems" @clear="clearAllCompleted"></Tabs>
   </section>
 </template>
 
 <script>
 import Item from "./item.vue";
+import Tabs from "./tabs.vue";
+let i = 0;
 export default {
-  components: { Item },
+  components: { Item, Tabs },
   data() {
     return {
-      todo: {
-        id: 0,
-        content: "somthing todo",
-        completed: false
-      }
+      todos: [],
+      filter: "all"
     };
   },
+  computed: {
+    filteredTodos() {
+      if (this.filter === "all") {
+        return this.todos;
+      }
+      const completed = this.filter === "completed";
+      return this.todos.filter(todo => completed === todo.completed);
+    }
+  },
   methods: {
-    addTodo() {}
+    addTodo(e) {
+      this.todos.unshift({
+        id: i++,
+        content: e.target.value.trim(),
+        completed: false
+      });
+      e.target.value = "";
+    },
+    delItem(id) {
+      this.todos.splice(this.todos.findIndex(todo => todo.id === id), 1);
+    },
+    toggleItems(state) {
+      this.filter = state;
+    },
+    clearAllCompleted() {
+      this.todos = this.todos.filter(todo => !todo.completed);
+    }
   }
 };
 </script>
@@ -50,7 +75,7 @@ export default {
   box-sizing: border-box;
   padding: 16px 16px 16px 60px;
   border: none;
-  box-shadow: inset 0 -2px 1px rgba(0,0,0,0.03);
+  box-shadow: inset 0 -2px 1px rgba(0, 0, 0, 0.03);
 }
 </style>
 

@@ -3,12 +3,13 @@ const webpack = require('webpack')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const HTMLPlugin = require('html-webpack-plugin')
 const isDev = process.env.NODE_ENV === 'devlopment'
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 const config = {
   target: 'web',
   entry: path.join(__dirname, 'src/index.js'),
   output: {
-    filename: 'bundle.js',
+    filename: '[name].[hash:8].js',
     path: path.join(__dirname, 'dist')
   },
   plugins: [
@@ -19,11 +20,10 @@ const config = {
     }),
     // make sure to include the plugin for the magic
     new VueLoaderPlugin(),
-    new HTMLPlugin
+    new HTMLPlugin(),
   ],
   module: {
-    rules: [
-      {
+    rules: [{
         test: /\.vue$/,
         loader: 'vue-loader'
       },
@@ -32,30 +32,14 @@ const config = {
         loader: 'babel-loader'
       },
       {
-        test: /\.styl(us)?$/,
-        use: [
-          'vue-style-loader',
-          'css-loader',
-          {
-            loader: 'postcss-loader',
-            options: {
-              sourceMap: true
-            }
-          },
-          'stylus-loader'
-        ]
-      },
-      {
         test: /\.(gif|jpg|jpeg|png|svg)$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: {
-              limit: 2048,
-              name: '[name].[ext]'
-            }
+        use: [{
+          loader: 'url-loader',
+          options: {
+            limit: 2048,
+            name: '[name].[ext]'
           }
-        ]
+        }]
       }
     ]
   }
@@ -77,6 +61,70 @@ if (isDev) {
   config.plugins.push(
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin
+  )
+
+  config.module.rules.push({
+    test: /\.styl(us)?$/,
+    use: [
+      'vue-style-loader',
+      'css-loader',
+      {
+        loader: 'postcss-loader',
+        options: {
+          sourceMap: true
+        }
+      },
+      'stylus-loader'
+    ]
+  })
+} else {
+  config.entry = {
+    app: path.join(__dirname, 'src/index.js'),
+    vendor: ['vue']
+  }
+  config.output.filename = '[name].[chunkhash:8].js'
+  config.module.rules.push({
+    test: /\.styl(us)?$/,
+    use: [
+      MiniCssExtractPlugin.loader,
+      'css-loader',
+      {
+        loader: 'postcss-loader',
+        options: {
+          sourceMap: true
+        }
+      },
+      'stylus-loader'
+    ]
+  })
+  config.optimization = {
+
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          chunks: 'initial',
+          minChunks: 2,
+          maxInitialRequests: 5,
+          minSize: 0
+        },
+        vendor: {
+          test: /node_modules/,
+          chunks: 'initial',
+          name: 'vendor',
+          priority: 10,
+          enforce: true
+        }
+      }
+    },
+
+    runtimeChunk: true
+
+  }
+  config.plugins.push(
+    new MiniCssExtractPlugin({
+      filename: "[name].[chunkhash:8].css",
+      // chunkFilename: "[id].css"
+    }),
   )
 }
 
